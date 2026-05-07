@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduBencana - SMK Kelas X</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .menu-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+
+        #audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .game-target {
+            cursor: pointer;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Audio Element -->
+    <audio id="bg-music" loop>
+        <source src="https://github.com/umamahmahdiyah16-alt/lagu-gim-ku/raw/refs/heads/main/Flood_Gate_Protocol.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Audio Control -->
+    <div id="audio-control">
+        <button onclick="toggleMusic()" class="bg-white p-3 rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+            <span id="music-icon" class="text-xl">🔇</span>
+        </button>
+    </div>
+
+    <div id="app" class="max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden relative flex flex-col min-h-[600px]">
+        
+        <!-- Dashboard (Hidden initially) -->
+        <div id="dashboard" class="hidden bg-blue-700 p-4 text-white flex justify-between items-center text-sm">
+            <div class="flex flex-col">
+                <span class="font-bold opacity-80 uppercase text-[10px]">Siswa</span>
+                <span id="display-identity">Nama - Kelas</span>
+            </div>
+            <div class="flex gap-6">
+                <div class="text-center">
+                    <span class="font-bold opacity-80 uppercase text-[10px]">Waktu</span>
+                    <div id="timer" class="font-mono text-lg font-bold">00:00</div>
+                </div>
+                <div class="text-center">
+                    <span class="font-bold opacity-80 uppercase text-[10px]">Skor</span>
+                    <div id="score-val" class="text-lg font-bold">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Identitas (First Screen) -->
+        <div id="identity-screen" class="flex-grow p-8 flex flex-col items-center justify-center text-center">
+            <div class="bg-blue-100 p-6 rounded-full mb-6">
+                <span class="text-6xl">📝</span>
+            </div>
+            <h1 class="text-2xl font-800 text-blue-800 mb-2">SELAMAT DATANG</h1>
+            <p class="text-gray-500 mb-8">Masukkan identitasmu untuk memulai pembelajaran.</p>
+            <div class="space-y-4 w-full max-w-xs mb-8">
+                <input type="text" id="input-name" placeholder="Nama Lengkap" class="w-full p-4 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none transition-all">
+                <input type="text" id="input-class" placeholder="Kelas (X SMK ...)" class="w-full p-4 border-2 border-gray-100 rounded-2xl focus:border-blue-500 outline-none transition-all">
+            </div>
+            <button onclick="saveIdentity()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-2xl text-lg shadow-lg transition-all active:scale-95">
+                MASUK KE MENU
+            </button>
+        </div>
+
+        <!-- Section: Main Menu -->
+        <div id="menu-hub" class="hidden flex-grow p-8 flex flex-col">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-800 text-gray-800">MENU UTAMA</h2>
+                <p class="text-gray-500">Halo, <span id="user-greet" class="text-blue-600 font-bold">User</span>! Pilih aktivitasmu hari ini.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="showSection('learning-goals')" class="menu-btn bg-white border-2 border-blue-50 p-6 rounded-2xl flex items-center gap-6 text-left group">
+                    <span class="text-4xl group-hover:scale-110 transition-transform">🎯</span>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Tujuan Pembelajaran</h3>
+                        <p class="text-sm text-gray-500">Apa yang akan kamu pelajari?</p>
+                    </div>
+                </button>
+
+                <button onclick="startQuiz()" class="menu-btn bg-blue-600 p-6 rounded-2xl flex items-center gap-6 text-left group text-white">
+                    <span class="text-4xl group-hover:scale-110 transition-transform">✍️</span>
+                    <div>
+                        <h3 class="font-bold">Latihan Soal Mitigasi</h3>
+                        <p class="text-blue-100 text-sm">Simulasi bencana interaktif.</p>
+                    </div>
+                </button>
+
+                <button onclick="startMiniGame()" class="menu-btn bg-orange-500 p-6 rounded-2xl flex items-center gap-6 text-left group text-white">
+                    <span class="text-4xl group-hover:scale-110 transition-transform">🎮</span>
+                    <div>
+                        <h3 class="font-bold">Gim Seru: Siaga Klik</h3>
+                        <p class="text-orange-100 text-sm">Latih ketangkasan dan fokusmu.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section: Tujuan Pembelajaran -->
+        <div id="learning-goals" class="hidden flex-grow p-8">
+            <button onclick="backToMenu()" class="text-blue-600 font-bold flex items-center gap-2 mb-6 hover:translate-x-[-5px] transition-transform">
+                ← Kembali ke Menu
+            </button>
+            <h2 class="text-2xl font-800 text-gray-800 mb-6">Tujuan Pembelajaran</h2>
+            <div class="space-y-4">
+                <div class="flex gap-4 p-4 bg-gray-50 rounded-xl">
+                    <span class="text-blue-600 font-bold">01</span>
+                    <p class="text-gray-700">Siswa mampu menjelaskan definisi dan konsep dasar mitigasi bencana alam secara mandiri.</p>
+                </div>
+                <div class="flex gap-4 p-4 bg-gray-50 rounded-xl">
+                    <span class="text-blue-600 font-bold">02</span>
+                    <p class="text-gray-700">Siswa dapat mengidentifikasi tindakan penyelamatan diri saat terjadi gempa bumi, banjir, dan kebakaran.</p>
+                </div>
+                <div class="flex gap-4 p-4 bg-gray-50 rounded-xl">
+                    <span class="text-blue-600 font-bold">03</span>
+                    <p class="text-gray-700">Siswa mampu mendemonstrasikan penggunaan alat keselamatan sederhana (seperti APAR) dengan tepat.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Latihan Soal (Quiz) -->
+        <div id="quiz-screen" class="hidden flex-grow p-6">
+            <div class="mb-6">
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div id="quiz-progress" class="bg-green-500 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div id="quiz-content" class="space-y-6">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-xl">
+                    <p id="scenario-text" class="text-lg font-medium text-gray-800 leading-relaxed"></p>
+                </div>
+                <div id="options-grid" class="grid grid-cols-1 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- Section: Gim Seru (Mini Game) -->
+        <div id="minigame-screen" class="hidden flex-grow p-6 flex flex-col">
+            <div class="text-center mb-4">
+                <h3 class="font-bold text-gray-700">SIAGA KLIK!</h3>
+                <p class="text-xs text-gray-400">Klik ikon TAS SIAGA 🎒 yang muncul secepat mungkin!</p>
+            </div>
+            <div id="game-area" class="flex-grow bg-gray-100 rounded-2xl relative overflow-hidden border-2 border-dashed border-gray-300">
+                <!-- Targets will appear here -->
+                <div id="game-start-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100/90 z-10">
+                    <span class="text-4xl mb-4">🎒</span>
+                    <button onclick="runMiniGame()" class="bg-orange-500 text-white px-8 py-3 rounded-xl font-bold">Mulai Main</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback & Results (Shared) -->
+        <div id="feedback-panel" class="hidden p-8 text-center">
+            <div id="fb-icon" class="text-7xl mb-4"></div>
+            <h3 id="fb-title" class="text-2xl font-bold mb-2"></h3>
+            <p id="fb-desc" class="text-gray-600 mb-8"></p>
+            <button onclick="handleFeedbackNext()" class="bg-blue-600 text-white font-bold py-3 px-12 rounded-xl shadow-lg">Lanjut</button>
+        </div>
+
+        <!-- Final Results -->
+        <div id="result-screen" class="hidden p-10 text-center flex-grow flex flex-col items-center justify-center">
+            <h2 class="text-3xl font-800 text-blue-600 mb-2">Hore, Selesai!</h2>
+            <p id="final-user" class="text-gray-500 font-medium"></p>
+            <div id="final-icon" class="text-8xl my-6">🏆</div>
+            <div class="flex justify-center gap-8 mb-8">
+                <div class="text-center">
+                    <p class="text-[10px] uppercase text-gray-400 font-bold">Skor</p>
+                    <div id="res-score" class="text-4xl font-black text-orange-500">0</div>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] uppercase text-gray-400 font-bold">Waktu</p>
+                    <div id="res-time" class="text-4xl font-black text-blue-500">00:00</div>
+                </div>
+            </div>
+            <button onclick="backToMenu()" class="bg-gray-800 text-white font-bold py-3 px-8 rounded-xl hover:bg-black transition-colors">Ke Menu Utama</button>
+        </div>
+
+        <!-- Footer / Copyright -->
+        <div class="p-4 bg-gray-50 text-center border-t border-gray-100">
+            <p class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">@uma - Edukasi Mitigasi Bencana SMK 2024</p>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let user = { name: "", class: "" };
+        let quizScore = 0;
+        let miniGameScore = 0;
+        let currentQuizIndex = 0;
+        let timerSeconds = 0;
+        let timerInterval;
+        let isMusicPlaying = false;
+        let miniGameActive = false;
+        let activeSection = 'identity-screen';
+
+        const music = document.getElementById('bg-music');
+        const musicIcon = document.getElementById('music-icon');
+
+        const quizData = [
+            {
+                scenario: "Gempa bumi terjadi saat kamu berada di laboratorium. Rak kimia di dekatmu mulai bergoyang. Apa tindakanmu?",
+                options: [
+                    { text: "Berlari ke arah pintu keluar", correct: false, reason: "Berlari saat guncangan meningkatkan risiko jatuh atau tertimpa benda cair kimia." },
+                    { text: "Drop, Cover, Hold On (Berlutut, Lindungi Kepala, Berpegangan)", correct: true, reason: "Tepat! Ini adalah prosedur standar keselamatan saat gempa." },
+                    { text: "Bersembunyi di dalam lemari", correct: false, reason: "Lemari berisiko roboh atau terkunci dari luar." }
+                ]
+            },
+            {
+                scenario: "Setelah banjir surut, kamu ingin membersihkan rumah. Apa hal pertama yang harus dipastikan?",
+                options: [
+                    { text: "Langsung menyalakan saklar lampu", correct: false, reason: "Bahaya korsleting! Instalasi kabel mungkin masih basah." },
+                    { text: "Memakai alas kaki karet dan sarung tangan", correct: true, reason: "Betul! Untuk menghindari luka dan penyakit dari air sisa banjir." },
+                    { text: "Memasukkan semua sampah ke lubang wc", correct: false, reason: "Ini akan merusak saluran sanitasi rumahmu." }
+                ]
+            }
+        ];
+
+        // Core Functions
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                music.pause();
+                musicIcon.innerText = "🔇";
+            } else {
+                music.play().catch(e => console.log("Blocked", e));
+                musicIcon.innerText = "🔊";
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        function saveIdentity() {
+            const n = document.getElementById('input-name').value.trim();
+            const c = document.getElementById('input-class').value.trim();
+            if (!n || !c) return alert("Isi nama dan kelas dulu ya!");
+            
+            user.name = n;
+            user.class = c;
+            document.getElementById('user-greet').innerText = n;
+            document.getElementById('display-identity').innerText = `${n} - ${c}`;
+            
+            showSection('menu-hub');
+            if(!isMusicPlaying) toggleMusic();
+        }
+
+        function showSection(id) {
+            document.getElementById(activeSection).classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+            activeSection = id;
+
+            // Dashboard visibility logic
+            const db = document.getElementById('dashboard');
+            if (id === 'quiz-screen' || id === 'minigame-screen') db.classList.remove('hidden');
+            else db.classList.add('hidden');
+        }
+
+        function backToMenu() {
+            resetStats();
+            showSection('menu-hub');
+        }
+
+        function resetStats() {
+            clearInterval(timerInterval);
+            timerSeconds = 0;
+            quizScore = 0;
+            miniGameScore = 0;
+            currentQuizIndex = 0;
+            document.getElementById('timer').innerText = "00:00";
+            document.getElementById('score-val').innerText = "0";
+            miniGameActive = false;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                const s = (timerSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        // Quiz Logic
+        function startQuiz() {
+            quizScore = 0;
+            currentQuizIndex = 0;
+            document.getElementById('score-val').innerText = "0";
+            showSection('quiz-screen');
+            startTimer();
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = quizData[currentQuizIndex];
+            document.getElementById('scenario-text').innerText = q.scenario;
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            document.getElementById('quiz-progress').style.width = `${(currentQuizIndex / quizData.length) * 100}%`;
+
+            q.options.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = "w-full text-left p-4 rounded-2xl border-2 border-gray-100 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all flex items-center gap-3 font-medium text-gray-700";
+                b.innerHTML = `<span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold">${i+1}</span> ${opt.text}`;
+                b.onclick = () => checkQuizAnswer(opt);
+                grid.appendChild(b);
+            });
+        }
+
+        function checkQuizAnswer(opt) {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('feedback-panel').classList.remove('hidden');
+
+            const icon = document.getElementById('fb-icon');
+            const title = document.getElementById('fb-title');
+            
+            if (opt.correct) {
+                quizScore += 50;
+                icon.innerText = "⭐";
+                title.innerText = "Keren!";
+                title.className = "text-2xl font-bold mb-2 text-green-600";
+                document.getElementById('score-val').innerText = quizScore;
+            } else {
+                icon.innerText = "❌";
+                title.innerText = "Opps..";
+                title.className = "text-2xl font-bold mb-2 text-red-600";
+            }
+            document.getElementById('fb-desc').innerText = opt.reason;
+        }
+
+        function handleFeedbackNext() {
+            document.getElementById('feedback-panel').classList.add('hidden');
+            if (activeSection === 'quiz-screen') {
+                currentQuizIndex++;
+                if (currentQuizIndex < quizData.length) {
+                    document.getElementById('quiz-screen').classList.remove('hidden');
+                    renderQuestion();
+                } else {
+                    showFinalResult(quizScore);
+                }
+            }
+        }
+
+        // Mini Game Logic
+        function startMiniGame() {
+            miniGameScore = 0;
+            document.getElementById('score-val').innerText = "0";
+            showSection('minigame-screen');
+            document.getElementById('game-start-overlay').classList.remove('hidden');
+        }
+
+        function runMiniGame() {
+            document.getElementById('game-start-overlay').classList.add('hidden');
+            miniGameActive = true;
+            startTimer();
+            spawnTarget();
+            
+            // Limit game to 30 seconds
+            setTimeout(() => {
+                if (miniGameActive) {
+                    miniGameActive = false;
+                    showFinalResult(miniGameScore);
+                }
+            }, 30000);
+        }
+
+        function spawnTarget() {
+            if (!miniGameActive) return;
+            
+            const area = document.getElementById('game-area');
+            const target = document.createElement('div');
+            target.className = "game-target absolute w-12 h-12 flex items-center justify-center text-2xl bg-white shadow-md rounded-xl select-none";
+            target.innerText = "🎒";
+            
+            const maxX = area.clientWidth - 50;
+            const maxY = area.clientHeight - 50;
+            target.style.left = Math.random() * maxX + "px";
+            target.style.top = Math.random() * maxY + "px";
+            
+            target.onclick = () => {
+                miniGameScore += 10;
+                document.getElementById('score-val').innerText = miniGameScore;
+                target.remove();
+                spawnTarget();
+            };
+            
+            area.appendChild(target);
+            
+            // Remove target if not clicked in 1.5s
+            setTimeout(() => {
+                if(target.parentNode) {
+                    target.remove();
+                    spawnTarget();
+                }
+            }, 1500);
+        }
+
+        function showFinalResult(finalScore) {
+            clearInterval(timerInterval);
+            showSection('result-screen');
+            document.getElementById('final-user').innerText = `${user.name} (${user.class})`;
+            document.getElementById('res-score').innerText = finalScore;
+            document.getElementById('res-time').innerText = document.getElementById('timer').innerText;
+        }
+
+    </script>
+</body>
+</html>
